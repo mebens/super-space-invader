@@ -1,33 +1,53 @@
 require("lib.ammo")
-require("lib.physics")
 require("lib.assets")
 require("lib.input")
 require("lib.tweens")
 require("lib.gfx")
+HC = require("lib.hc")
 
-slaxml = require("slaxdom")
-require("misc.xmlUtils")
+require("misc.utils")
+require("misc.Text")
+require("modules.bloom")
+require("modules.noise")
+require("modules.data")
 
+require("entities.UI")
+require("entities.HUD")
 require("entities.Player")
-require("entities.Building")
-require("worlds.Running")
+require("entities.Bullet")
+require("entities.Missile")
+require("entities.Enemy")
+require("entities.Pawn")
+require("entities.Dart")
+require("entities.Fighter")
+require("entities.FighterBullet")
+require("entities.Cannon")
+require("entities.CannonShot")
+require("entities.Anchor")
+require("entities.Background")
+require("worlds.Game")
 
 TILE_SIZE = 9 
 
 function love.load()
-  assets.loadFont("uni05.ttf", { 24, 16, 8 }, "main")
+  assets.loadFont("square.ttf", { 70, 24, 18, 12 }, "main")
+  assets.loadShader("noise.frag")
+  assets.loadShader("bloom.frag")
   
-  input.define("jump", " ", "up", "z")
-  input.define("shoot", "left", "x")
-  input.define("pause", "p")
+  input.define("left", "left", "a")
+  input.define("right", "right", "d")
+  input.define("select", "enter", " ")
   
   postfx.init()
   postfx.scale = 2
+  postfx.add(bloom)
+  postfx.add(noise)
   
+  data.init()
   love.graphics.width = love.graphics.width / 2
   love.graphics.height = love.graphics.height / 2
   love.mouse.setVisible(false)
-  ammo.world = Running:new()
+  ammo.world = Game:new()
 end
 
 function love.update(dt)
@@ -41,4 +61,3 @@ function love.draw()
   ammo.draw()
   postfx.stop()
 end
-
