@@ -320,6 +320,7 @@ function Game:wave5(i, r)
   if i == 0 then
     return 1
   elseif i == 1 then
-    
+    self:add(Battleship:new(love.graphics.width / 2))
+  end
 end
   
