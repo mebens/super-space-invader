@@ -21,6 +21,13 @@ function Cannon:initialize(x, y)
   self.factor = 9
   self.shakeAmount = 5
   self.shakeTime = 0.3
+  self.explosionSize = "large"
+end
+
+function Cannon:added()
+  Enemy.added(self)
+  self.engine = playSound("cannon-engine")
+  self.engine:setLooping(true)
 end
 
 function Cannon:update(dt)
@@ -32,6 +39,7 @@ function Cannon:update(dt)
   else
     self.shootTimer = self.shootInterval
     self.map:play("fire")
+    playRandom{"cannon-shot1", "cannon-shot2", "cannon-shot3"}
     
     for i = 1, math.random(self.minShot, self.maxShot) do
       local randomAngle = math.tau / 4 + self.shotRange * math.random() - self.shotRange / 2
@@ -39,3 +47,10 @@ function Cannon:update(dt)
     end
   end
 end
+
+function Cannon:die(e, r)
+  Enemy.die(self, e, r)
+  self.engine:stop()
+  self.engine = nil
+end
+  

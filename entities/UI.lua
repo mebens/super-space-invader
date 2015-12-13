@@ -6,7 +6,7 @@ function UI:initialize()
   self.alpha = 0
   self.items = {}
   self.selected = nil
-  self.selectTime = 0.5
+  self.selectTime = 0.6
   self.selectTimer = 0
   self.outsidePadding = love.graphics.width / 16
   self.insidePadding = 10
@@ -27,6 +27,8 @@ function UI:initialize()
   
   self.countdown = 0
   self.countdownScale = 1
+  self.selectingSnd = playSound("selecting")
+  self.selectingSnd:stop()
 end
 
 function UI:update(dt)
@@ -35,18 +37,23 @@ function UI:update(dt)
   if input.down("left") and input.down("right") then
     if self.selectTimer >= self.selectTime then
       self:select()
+      self.selectingSnd:stop()
     else
       self.selectTimer = self.selectTimer + dt
+      self.selectingSnd:play()
     end
   else
     self.selectTimer = 0
+    self.selectingSnd:stop()
     
     if input.pressed("left") and self.selected > 1 then
       self.selected = self.selected - 1
+      playRandom{"select1", "select2"}
     end
     
     if input.pressed("right") and self.selected < #self.items then
       self.selected = self.selected + 1
+      playRandom{"select1", "select2"}
     end
   end
 end
@@ -76,9 +83,13 @@ function UI:draw()
       local x = self.outsidePadding + (width + self.insidePadding) * (i - 1)
       local y = love.graphics.height / 2 - self.height / 2
       local alpha = 100
+      local offsetX = 0
+      local offsetY = 0
       
       if i == self.selected then
         alpha = self.selectTimer > 0 and 240 or 200
+        offsetX = 5 * (self.selectTimer / self.selectTime) * (1 - 2 * math.random(0, 1))
+        offsetY = 5 * (self.selectTimer / self.selectTime) * (1 - 2 * math.random(0, 1))
       end
       
       love.graphics.setColor(148, 228, 255, alpha * self.alpha)
@@ -87,12 +98,12 @@ function UI:draw()
       if instanceOf(Text, item) then
         item.width = width
         item.color[4] = 255 * self.alpha
-        item:draw(x, y + self.height / 2 + item.y)
+        item:draw(x + offsetX, y + self.height / 2 + item.y + offsetY)
       else
         for _, i in ipairs(item) do
           i.width = width
           i.color[4] = 255 * self.alpha
-          i:draw(x, y + self.height / 2 + i.y)
+          i:draw(x + offsetX, y + self.height / 2 + i.y + offsetY)
         end
       end
     end
@@ -115,6 +126,7 @@ function UI:select()
   local result = item.select()
   if result ~= true then self:deactivate() end
   self.selectTimer = 0
+  playSound("make-selection")
 end
 
 function UI:activate()
@@ -238,7 +250,7 @@ function UI:death()
 end
 
 function UI:display(time, text, func)
-  self:activate()
+  --self:activate()
   self.displayTxt.text = text
   
   delay(time, function() 

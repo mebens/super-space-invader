@@ -5,6 +5,15 @@ function collide(e1, e2)
     and e1.y - e1.height / 2 < e2.y + e2.height / 2
 end
 
+function playSound(sound, volume, pan)
+  if type(sound) == "string" then sound = assets.sfx[sound] end
+  return sound:play(volume, pan)
+end
+
+function playRandom(sounds, volume, pan)
+  return playSound(sounds[math.random(1, #sounds)], volume, pan)
+end
+
 function Entity:drawImage(image, x, y, color, ox, oy)
   image = image or self.image
   color = color or self.color

@@ -23,11 +23,18 @@ function Game:initialize()
 end
 
 function Game:start()
-  self.ui:welcome()
+  self.ui:welcome()  
+  self.menuMusic = assets.music.menu:loop()
+  self.waveMusic = assets.music.wave:loop()
+  self.menuVolume = 1
+  self.waveVolume = 0
+  self.waveMusic:stop()
 end
 
 function Game:update(dt)
   World.update(self, dt)
+  self.menuMusic:setVolume(self.menuVolume)
+  self.waveMusic:setVolume(self.waveVolume)
   
   if self.shakeTimer > 0 then
     self.shakeTimer = self.shakeTimer - dt
@@ -72,6 +79,8 @@ function Game:startWave(num)
   self.player:reset()
   
   self.ui:display(1, "Wave " .. num, function()
+    delay(2.5, self.fadeMusic, self)
+    
     self.ui:startCountdown(function()
       self.player:reset()
       self.inWave = true
@@ -92,12 +101,14 @@ end
 function Game:endWave()
   self.inWave = false
   self.ui:upgrades()
+  self:fadeMusic()
 end
 
 function Game:onDeath()
   self.ui:death()
   self:shake(0.5, 4)
   self.inWave = false
+  self:fadeMusic()
 end
 
 function Game:completeUpgrade(attack, defence)
@@ -113,6 +124,23 @@ function Game:shake(time, amount)
     self.shakeTimer = time
     self.shakeAmount = amount
   end
+end
+
+function Game:fadeMusic()
+  local sound1, sound2
+  
+  if self.menuVolume > 0 then
+    sound1 = "menu"
+    sound2 = "wave"
+  else
+    sound1 = "wave"
+    sound2 = "menu"
+  end
+  
+  self[sound2 .. "Music"]:play()
+  tween(self, 0.5, { [sound2 .. "Volume"] = 1 }, nil, function()
+    tween(self, 0.5, { [sound1 .. "Volume"] = 0 })
+  end)
 end
 
 function Game:randomX(class)

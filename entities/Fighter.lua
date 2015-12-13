@@ -96,4 +96,5 @@ function Fighter:shoot()
   ))
   
   self.map:play("fire")
+  playRandom{"shoot1", "shoot2", "shoot3", "shoot4", "shoot5"}
 end

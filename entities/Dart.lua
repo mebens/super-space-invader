@@ -53,6 +53,11 @@ function Dart:initialize(x, y, ySpeed)
   self.ps:start()
 end
 
+function Dart:added()
+  Enemy.added(self)
+  self.engine = playSound("dart-engine")
+end
+
 function Dart:update(dt)
   if self.dead then
     self.ps:stop()
@@ -67,4 +72,10 @@ end
 function Dart:draw()
   love.graphics.draw(self.ps)
   Enemy.draw(self)
+end
+
+function Dart:die(e, r)
+  Enemy.die(self, e, r)
+  self.engine:stop()
+  self.engine = nil
 end

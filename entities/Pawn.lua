@@ -84,6 +84,7 @@ function Pawn:initialize(x, y, xSpeed, ySpeed)
   self.ySpeed = ySpeed or 100
   self.color = { 0, 220, 0 }
   self.factor = 4
+  self.shakeAmount = 1
 end
 
 function Pawn:enableRage()

@@ -31,8 +31,9 @@ function Enemy:initialize(x, y)
   self.respawn = "rage"
   self.rageMode = false
   self.rageRatio = 2
-  self.shakeAmount = 1
+  self.shakeAmount = 2
   self.shakeTime = 0.15
+  self.explosionSize = "small"
 end
 
 function Enemy:added()
@@ -171,7 +172,12 @@ end
 function Enemy:damage(amount)
   if self.dead then return end
   self.health = self.health - amount
-  if self.health <= 0 then self:die() end
+  
+  if self.health <= 0 then
+    self:die()
+  else
+    playRandom({"hit1", "hit2", "hit3"}, 0.6)
+  end
 end
 
 function Enemy:die(explosion, delayRemove)
@@ -205,6 +211,12 @@ function Enemy:die(explosion, delayRemove)
     self.deathPS:emit(math.random(12, 22) * factor)
     
     self.world:shake(self.shakeTime, self.shakeAmount)
+    
+    if self.explosionSize == "large" then
+      playRandom{"large-explosion1", "large-explosion2", "large-explosion3", "large-explosion4"}
+    else
+      playRandom{"small-explosion1", "small-explosion2", "small-explosion3", "small-explosion4", "small-explosion5"}
+    end
   end
 end
 

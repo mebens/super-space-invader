@@ -31,6 +31,7 @@ end
 function Missile:added()
   Missile.all:push(self)
   self.shape = HC.rectangle(self.x - self.width / 2, self.y - self.height / 2, self.width, self.height)
+  self.fireSound = playRandom{"fire-missile1", "fire-missile2"}
 end
 
 function Missile:removed()
@@ -49,6 +50,10 @@ function Missile:update(dt)
     end
     
     return
+  end
+  
+  if not self.engineSound and self.fireSound:tell() > 1 then
+    self.engineSound = playSound("missile-engine")
   end
   
   if self.target then
@@ -96,6 +101,8 @@ end
 
 function Missile:die(explosion)
   self.dead = true
+  self.fireSound:stop()
+  if self.engineSound then self.engineSound:stop() end
   self.ps:stop()
   if explosion == nil then explosion = true end
   
@@ -112,5 +119,7 @@ function Missile:die(explosion)
     self.deathPS:setColors(255, 60, 0, 255, 255, 220, 0, 0)
     self.deathPS:setPosition(self.x, self.y)
     self.deathPS:emit(math.random(60, 100))
+    
+    playRandom{"small-explosion1", "small-explosion2", "small-explosion3", "small-explosion4", "small-explosion5"}
   end
 end

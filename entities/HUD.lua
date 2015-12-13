@@ -31,7 +31,12 @@ function HUD:draw()
     if self.world.player.shieldEnabled then
       text = text .. math.round(self.world.player.shieldHealth)
     elseif self.world.player.shieldRegenTimer > 0 then
-      text = text .. math.ceil(self.world.player.shieldRegenTimer) .. "s"
+      local remaining = self.world.player.shieldRegenTimer - math.floor(self.world.player.shieldRegenTimer)
+      local dots
+      if remaining >= 0 then dots = "..." end
+      if remaining >= .33 then dots = ".." end
+      if remaining >= .66 then dots = "." end
+      text = text .. math.ceil(self.world.player.shieldRegenTimer) .. dots
     else
       text = text .. "Ready"
     end

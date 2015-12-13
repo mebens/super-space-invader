@@ -1,8 +1,8 @@
 Player = class("Player", Entity)
 Player.static.attackUpgrades = {
   { "Two Guns", "Double the trouble" },
-  { "Faster Firerate", "30% more dak dak" },
-  { "Faster Bullets", "50% more muzzle velocity" },
+  { "Faster Firerate", "50% more dak dak" },
+  { "Faster Bullets", "Double the muzzle velocity" },
   { "Homing Missiles", "In case bullets weren't enough" },
   { "More Missiles", "50% faster firerate" },
   { "Three Guns", "You can taste the freedom" }
@@ -10,9 +10,9 @@ Player.static.attackUpgrades = {
 
 Player.static.defenceUpgrades = {
   { "Double Health", "Give the ship a beer gut" },
-  { "Faster Regen", "50% more limb regrowth" },
-  { "Less Regen Delay", "40% less sick days" },
+  { "Less Regen Delay", "40% less dicking around" },
   { "Shield", "Toggle by pressing left and right together" },
+  { "Faster Regen", "Half as many sick days" },
   { "Shield Stamina", "+100 shield health" },
   { "Shield Explosion", "The shield will take some fools with it when it blows" }
 }
@@ -46,6 +46,7 @@ function Player:initialize()
   self.midGunOffsetY = -8
   self.sideGunOffsetX = self.width / 2 - 4
   self.sideGunOffsetY = -1
+  self.shieldOffsetY = -self.height / 2 - 3
   
   self.attackLvl = 0
   self.defenceLvl = 0
@@ -68,6 +69,9 @@ function Player:initialize()
     ps:start()
     self["jetPS" .. i] = ps
   end
+  
+  self.engine = playSound("player-engine")
+  self.engine:setLooping(true)
 end
 
 function Player:settingDefaults()
@@ -87,17 +91,21 @@ function Player:settingDefaults()
   self.maxHealth = 100
   self.health = self.maxHealth
   self.regenRate = 10
-  self.regenTime = 7
+  self.regenTime = 5
   self.regenTimer = 0
   
-  self.shieldAllowed = true
+  self.shieldAllowed = false
   self.shieldEnabled = false
   self.shieldRegenTime = 10
   self.shieldRegenTimer = 0
   self.shieldMaxHealth = 150
   self.shieldHealth = self.shieldMaxHealth
   self.shieldExplosion = false
-  self.shieldExplosionRange = 100
+  self.shieldExplosionRange = 150
+  
+  self.shieldSound = playSound("shield-running")
+  self.shieldSound:stop()
+  self.shieldSound:setLooping(true)
 end
 
 function Player:added()
@@ -189,19 +197,25 @@ function Player:update(dt)
       self.shieldRegenTimer = self.shieldRegenTimer - dt
     elseif activated then
       self.shieldEnabled = not self.shieldEnabled
-      if self.shieldEnabled then self.shieldPS:start() end
+      
+      if self.shieldEnabled then
+        self.shieldPS:start()
+        self.shieldSound:play()
+      end
     end
     
-    if self.shieldPS and not self.shieldEnabled then self.shieldPS:stop() end
+    if not self.shieldEnabled then
+      if self.shieldPS then self.shieldPS:stop() end
+      self.shieldSound:stop()
+    end
   end
   
   if self.shieldPS then
-    self.shieldPS:moveTo(self.x, self.y - self.height / 2)
+    self.shieldPS:moveTo(self.x, self.y + self.shieldOffsetY)
     self.shieldPS:update(dt)
   elseif self.shieldAllowed then
     self.shieldPS = love.graphics.newParticleSystem(Enemy.rageParticle, 300)
     self:shieldSparkMode("idle")
-    self.shieldPS:setSizes(0.8, 0.6, 0.2)
     self.shieldPS:setEmitterLifetime(-1)
     self.shieldPS:setEmissionRate(35)
     self.shieldPS:setAreaSpread("normal", self.width / 3, 0)
@@ -233,17 +247,17 @@ function Player:draw()
   self:drawMap()
   
   if self.shieldEnabled then
-    self:drawImage(self.shieldImg, self.x, self.y - self.height / 2, self.shieldColor)
+    self:drawImage(self.shieldImg, self.x, self.y + self.shieldOffsetY, self.shieldColor)
   end
   
   if self.shieldPS then love.graphics.draw(self.shieldPS) end
-
   -- love.graphics.setColor(self.color)
   -- love.graphics.rectangle("fill", self.x - self.width / 2, self.y - self.height / 2, self.width, self.height)
 end
 
 function Player:shoot()
   self.gunMap:play("fire")
+  playRandom{"shoot1", "shoot2", "shoot3", "shoot4", "shoot5"}
   
   if self.guns == 1 or self.guns == 3 then
     self.world:add(Bullet:new(self.x + self.midGunOffsetX, self.y + self.midGunOffsetY, self.bulletSpeed))
@@ -268,18 +282,25 @@ function Player:damage(amount)
     self:shieldSparkMode("hit")
     self.shieldPS:emit(amount)
     self:shieldSparkMode("idle")
+    playRandom{"shield-hit1", "shield-hit2"}
     
     if self.shieldHealth <= 0 then
       self.shieldEnabled = false
       self.shieldRegenTimer = self.shieldRegenTime
       self.shieldHealth = self.shieldMaxHealth
+      self.shieldSound:stop()
       if self.shieldExplosion then self:explodeShield() end
     end
   else
     self.health = self.health - amount
     self.regenTimer = self.regenTime
     self.world.hud:takenDamage()
-    if self.health <= 0 then self:die() end
+    
+    if self.health <= 0 then
+      self:die()
+    else
+      playRandom{"hit1", "hit2", "hit3"}
+    end
   end
 end
 
@@ -289,8 +310,8 @@ function Player:applyLevels(attack, defence)
   self:settingDefaults()
   
   if self.attackLvl >= 1 then self.guns = 2 end
-  if self.attackLvl >= 2 then self.shootInterval = 0.175 end
-  if self.attackLvl >= 3 then self.bulletSpeed = 600 end
+  if self.attackLvl >= 2 then self.shootInterval = 0.125 end
+  if self.attackLvl >= 3 then self.bulletSpeed = 800 end
   if self.attackLvl >= 4 then self.missiles = true end
   if self.attackLvl >= 5 then self.missileInterval = 2.5 end
   if self.attackLvl >= 6 then self.guns = 3 end
@@ -300,9 +321,9 @@ function Player:applyLevels(attack, defence)
     self.health = self.maxHealth
   end
   
-  if self.defenceLvl >= 2 then self.regenRate = 15 end
-  if self.defenceLvl >= 3 then self.regenTime = 4 end
-  if self.defenceLvl >= 4 then self.shieldAllowed = true end
+  if self.defenceLvl >= 2 then self.regenTime = 3 end
+  if self.defenceLvl >= 3 then self.shieldAllowed = true end
+  if self.defenceLvl >= 4 then self.regenRate = 20 end
   
   if self.defenceLvl >= 5 then
     self.shieldMaxHealth = 250
@@ -318,6 +339,7 @@ function Player:reset()
   self.shieldRegenTimer = 0
   self.jetPS1:start()
   self.jetPS2:start()
+  self.engine:resume()
 end
 
 function Player:die()
@@ -326,6 +348,8 @@ function Player:die()
   self.world:onDeath()
   self.jetPS1:stop()
   self.jetPS2:stop()
+  self.engine:pause()
+  playRandom{"large-explosion1", "large-explosion2", "large-explosion3", "large-explosion4"}
   
   self.deathPS = love.graphics.newParticleSystem(Enemy.deathParticle, 300)
   self.deathPS:setDirection(0)
@@ -345,10 +369,13 @@ end
 function Player:explodeShield()
   self:shieldSparkMode("explosion")
   self.shieldPS:emit(150)
+  self:shieldSparkMode("idle")
+  self.world:shake(0.3, 5)
+  playRandom{"large-explosion1", "large-explosion2", "large-explosion3", "large-explosion4"}
   
   for e in Enemy.all:iterate() do
     if math.distance(self.x, self.y, e.x, e.y) <= self.shieldExplosionRange then
-      e:die()
+      e:die(true, true)
     end
   end
 end
@@ -360,17 +387,20 @@ function Player:shieldSparkMode(mode)
     self.shieldPS:setSpeed(10, 20)
     self.shieldPS:setLinearDamping(0)
     self.shieldPS:setParticleLifetime(1.5, 2.5)
+    self.shieldPS:setSizes(0.8, 0.6, 0.2)
   elseif mode == "hit" then
     self.shieldPS:setDirection(math.tau * .75)
     self.shieldPS:setSpread(math.tau / 4)
     self.shieldPS:setSpeed(150, 250)
     self.shieldPS:setLinearDamping(3)
     self.shieldPS:setParticleLifetime(0.7, 1.2)
+    self.shieldPS:setSizes(0.8, 0.6, 0.2)
   elseif mode == "explosion" then
     self.shieldPS:setDirection(math.tau * .75)
-    self.shieldPS:setSpread(math.tau / 4)
-    self.shieldPS:setSpeed(300, 500)
+    self.shieldPS:setSpread(math.tau / 2)
+    self.shieldPS:setSpeed(500, 700)
     self.shieldPS:setLinearDamping(5)
-    self.shieldPS:setParticleLifetime(0.7, 1.2)
+    self.shieldPS:setParticleLifetime(1, 1.5)
+    self.shieldPS:setSizes(1.3, 1.0, 0.5)
   end
 end
