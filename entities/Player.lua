@@ -10,8 +10,8 @@ Player.static.attackUpgrades = {
 
 Player.static.defenceUpgrades = {
   { "Double Health", "Give the ship a beer gut" },
-  { "Less Regen Delay", "40% less dicking around" },
   { "Shield", "Toggle by pressing left and right together" },
+  { "Less Regen Delay", "40% less dicking around" },
   { "Faster Regen", "Half as many sick days" },
   { "Shield Stamina", "+100 shield health" },
   { "Shield Explosion", "The shield will take some fools with it when it blows" }
@@ -195,6 +195,7 @@ function Player:update(dt)
     
     if self.shieldRegenTimer > 0 then
       self.shieldRegenTimer = self.shieldRegenTimer - dt
+      if self.shieldRegenTimer <= 0 and self.world.inWave then playSound("voice-shield-ready") end
     elseif activated then
       self.shieldEnabled = not self.shieldEnabled
       
@@ -321,9 +322,9 @@ function Player:applyLevels(attack, defence)
     self.health = self.maxHealth
   end
   
-  if self.defenceLvl >= 2 then self.regenTime = 3 end
-  if self.defenceLvl >= 3 then self.shieldAllowed = true end
-  if self.defenceLvl >= 4 then self.regenRate = 20 end
+  if self.defenceLvl >= 2 then self.shieldAllowed = true end
+  if self.defenceLvl >= 3 then self.regenTime = 3 end
+  if self.defenceLvl >= 4 then self.regenRate = 25 end
   
   if self.defenceLvl >= 5 then
     self.shieldMaxHealth = 250
@@ -349,6 +350,7 @@ function Player:die()
   self.jetPS1:stop()
   self.jetPS2:stop()
   self.engine:pause()
+  self.shieldSound:stop()
   playRandom{"large-explosion1", "large-explosion2", "large-explosion3", "large-explosion4"}
   
   self.deathPS = love.graphics.newParticleSystem(Enemy.deathParticle, 300)

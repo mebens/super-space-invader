@@ -5,16 +5,47 @@ function HUD:initialize()
   self.hurtTimer = 0
   self.hurtTime = 0.3
   self.pad = 5
+  self.lineSpace = 20
+  self.healthImg = assets.images.healthIcon
+  self.shieldImg = assets.images.shieldIcon
+  self.clockMap = Spritemap:new(assets.images.clockIcon, 9, 9)
+  self.clockMap:add("spin", { 1, 2, 3, 4, 5, 6, 7, 8 }, 20, true)
+  self.clockMap:play("spin")
 end
 
 function HUD:update(dt)
   if self.hurtTimer > 0 then
     self.hurtTimer = self.hurtTimer - dt
   end
+  
+  if self.world.player.shieldRegenTimer > 0 then
+    self.clockMap:update(dt)
+  end
 end
 
 function HUD:draw()
-  if not self.world.inWave then return end
+  -- score
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.setFont(assets.fonts.main[18])
+  love.graphics.printf("Score", self.pad, self.pad, love.graphics.width - self.pad * 2, "right")
+  
+  love.graphics.setFont(assets.fonts.main[12])
+  love.graphics.printf(self.world.score, self.pad, self.pad + self.lineSpace, love.graphics.width - self.pad * 2, "right")
+
+  if not self.world.inWave then
+    love.graphics.setFont(assets.fonts.main[18])
+    love.graphics.print("Hiscore", self.pad, self.pad)
+    
+    love.graphics.setFont(assets.fonts.main[12])
+    love.graphics.print(data.hiscore, self.pad, self.pad + self.lineSpace)
+    return
+  end
+  
+  love.graphics.setFont(assets.fonts.main[18])
+  -- health
+  love.graphics.setColor(255, 50, 50)
+  love.graphics.draw(self.healthImg, self.pad, self.pad, 0, 2, 2)
+  
   if self.world.player.health < self.world.player.maxHealth and self.world.player.regenTimer <= 0 then
     love.graphics.setColor(160, 255, 160)
   elseif self.hurtTimer > 0 then
@@ -23,27 +54,35 @@ function HUD:draw()
     love.graphics.setColor(255, 255, 255)
   end
   
-  local text = tostring(math.round(self.world.player.health))
+  love.graphics.print(math.round(self.world.player.health), self.pad * 2 + self.healthImg:getWidth() * 2, self.pad)
   
+  -- shield
   if self.world.player.shieldAllowed then
-    text = text .. "\n"
+    love.graphics.setColor(255, 255, 255)
+    local text, img, width
     
     if self.world.player.shieldEnabled then
-      text = text .. math.round(self.world.player.shieldHealth)
+      text = tostring(math.round(self.world.player.shieldHealth))
+      img = self.shieldImg
+      width = img:getWidth()
     elseif self.world.player.shieldRegenTimer > 0 then
-      local remaining = self.world.player.shieldRegenTimer - math.floor(self.world.player.shieldRegenTimer)
-      local dots
-      if remaining >= 0 then dots = "..." end
-      if remaining >= .33 then dots = ".." end
-      if remaining >= .66 then dots = "." end
-      text = text .. math.ceil(self.world.player.shieldRegenTimer) .. dots
+      text = tostring(math.ceil(self.world.player.shieldRegenTimer))
+      img = self.clockMap
+      width = img.width
     else
-      text = text .. "Ready"
+      text = "Ready"
+      img = self.shieldImg
+      width = img:getWidth()
     end
+    
+    if img == self.clockMap then
+      img:draw(self.pad, self.pad + self.lineSpace, 0, 2, 2)
+    else
+      love.graphics.draw(img, self.pad, self.pad + self.lineSpace, 0, 2, 2)
+    end
+    
+    love.graphics.print(text, self.pad * 2 + width * 2, self.pad + self.lineSpace)
   end
-  
-  love.graphics.setFont(assets.fonts.main[18])
-  love.graphics.printf(text, self.pad, self.pad, love.graphics.width - self.pad * 2, "left")
 end
 
 function HUD:takenDamage()

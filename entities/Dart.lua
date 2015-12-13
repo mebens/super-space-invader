@@ -2,6 +2,17 @@ Dart = class("Dart", Enemy)
 Dart.static.width = 10
 Dart.static.height = 30
 
+function Dart.static.line(num, ySpeed)
+  local y = Enemy.spawnY - Dart.height
+  local x = Enemy.padX + Dart.width / 2
+  
+  for i = 1, num do
+    local p = Dart:new(x, y, ySpeed)
+    ammo.world:add(p)
+    x = x + Dart.width + (love.graphics.width - Enemy.padX * 2 - Dart.width * num) / (num - 1)
+  end
+end
+
 function Dart.static.firingSquad(cols, time, reps, ySpeed)
   local i = 1
   local y = Enemy.spawnY - Dart.height
@@ -51,6 +62,8 @@ function Dart:initialize(x, y, ySpeed)
   local r, g, b = unpack(self.color)
   self.ps:setColors(r, g, b, 255, r, g, b, 0)
   self.ps:start()
+  
+  self.score = 20
 end
 
 function Dart:added()

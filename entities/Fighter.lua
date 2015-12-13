@@ -47,6 +47,8 @@ function Fighter:initialize(x, y, guns, strafe)
   
   self.map = Spritemap:new(assets.images.fighter, 10, 7)
   self.map:add("fire", { 2, 3, 3, 2, 2, 1 }, 20, false)
+  
+  self.score = 30
 end
 
 function Fighter:update(dt)

@@ -34,6 +34,7 @@ function Enemy:initialize(x, y)
   self.shakeAmount = 2
   self.shakeTime = 0.15
   self.explosionSize = "small"
+  self.score = 10
 end
 
 function Enemy:added()
@@ -166,7 +167,7 @@ function Enemy:enableRage()
 end
 
 function Enemy:placeAtSpawn()
-  self.y = Enemy.spawnY - self.height
+  self.y = Enemy.spawnY - self.class.height
 end
 
 function Enemy:damage(amount)
@@ -183,6 +184,7 @@ end
 function Enemy:die(explosion, delayRemove)
   if self.dead then return end
   HC.remove(self.shape)
+  self.world:addScore(self.score + (self.rageMode and 5 or 0))
   
   if delayRemove then
     delay(0, Enemy.all.remove, Enemy.all, self)

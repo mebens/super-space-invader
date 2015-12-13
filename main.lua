@@ -31,7 +31,7 @@ require("worlds.Game")
 TILE_SIZE = 9 
 
 function love.load()
-  assets.loadFont("square.ttf", { 70, 24, 18, 12 }, "main")
+  assets.loadFont("square.ttf", { 70, 24, 18, 12, 8 }, "main")
   assets.loadShader("noise.frag")
   assets.loadShader("bloom.frag")
   
@@ -43,6 +43,9 @@ function love.load()
   assets.loadImage("gun.png")
   assets.loadImage("shield.png")
   assets.loadImage("missile.png")
+  assets.loadImage("health-icon.png", "healthIcon")
+  assets.loadImage("shield-icon.png", "shieldIcon")
+  assets.loadImage("clock-icon.png", "clockIcon")
   for _, v in pairs(assets.images) do v:setFilter("nearest", "nearest") end
   
   assets.loadSfx("player-engine.ogg", 0.5)
@@ -57,11 +60,11 @@ function love.load()
   assets.loadSfx("hit1.ogg")
   assets.loadSfx("hit2.ogg")
   assets.loadSfx("hit3.ogg")
-  assets.loadSfx("shoot1.ogg", 0.4)
-  assets.loadSfx("shoot2.ogg", 0.4)
-  assets.loadSfx("shoot3.ogg", 0.4)
-  assets.loadSfx("shoot4.ogg", 0.4)
-  assets.loadSfx("shoot5.ogg", 0.4)
+  assets.loadSfx("shoot1.ogg", 0.5)
+  assets.loadSfx("shoot2.ogg", 0.5)
+  assets.loadSfx("shoot3.ogg", 0.5)
+  assets.loadSfx("shoot4.ogg", 0.5)
+  assets.loadSfx("shoot5.ogg", 0.5)
   assets.loadSfx("large-explosion1.ogg")
   assets.loadSfx("large-explosion2.ogg")
   assets.loadSfx("large-explosion3.ogg")
@@ -75,9 +78,13 @@ function love.load()
   assets.loadSfx("select2.ogg")
   assets.loadSfx("selecting.ogg")
   assets.loadSfx("make-selection.ogg", 0.7)
-  assets.loadSfx("shield-running.ogg", 0.9)
+  assets.loadSfx("shield-running.ogg", 1.5)
   assets.loadSfx("shield-hit1.ogg", 0.7)
   assets.loadSfx("shield-hit2.ogg", 0.7)
+  assets.loadSfx("voice-shield-ready.ogg", 0.7)
+  assets.loadSfx("voice-1.ogg", 0.4)
+  assets.loadSfx("voice-2.ogg", 0.4)
+  assets.loadSfx("voice-3.ogg", 0.4)
   
   assets.loadMusic("menu.mp3")
   assets.loadMusic("wave.mp3")
@@ -85,6 +92,7 @@ function love.load()
   input.define{"left", key = { "left", "a" }, mouse = "l"}
   input.define{"right", key = { "right", "d" }, mouse = "r"}
   input.define("select", "return", " ")
+  input.define("quit", "q")
   
   postfx.init()
   postfx.scale = 2
@@ -101,6 +109,7 @@ end
 function love.update(dt)
   postfx.update(dt)
   ammo.update(dt)
+  if input.released("quit") then love.event.quit() end
   input.update(dt)
 end
 

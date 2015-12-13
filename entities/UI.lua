@@ -15,11 +15,19 @@ function UI:initialize()
   self.title = Text:new{y = self.height - 45, width = love.graphics.width, align = "center", font = assets.fonts.main[24]}
   
   self.instructions = Text:new{
-    "Left/A/LMB to go left\nRight/D/RMB to go right\nHold both to select menu item",
-    y = love.graphics.height - 100,
+    "Left/A/LMB to go left\nRight/D/RMB to go right\nHold both to select menu item\nPress Q to quit",
+    y = love.graphics.height - 110,
     width = love.graphics.width,
     align = "center",
     font = assets.fonts.main[12]
+  }
+  
+  self.smallInstructions = Text:new{
+    "or just press enter to select, if you prefer",
+    y = love.graphics.height - 30,
+    width = love.graphics.width,
+    align = "center",
+    font = assets.fonts.main[8]
   }
   
   self.displayTxt = Text:new{width = love.graphics.width, align = "center", font = assets.fonts.main[24]}
@@ -116,6 +124,8 @@ function UI:draw()
     if self.showInstructions then
       self.instructions.color[4] = 255 * self.alpha
       self.instructions:draw()
+      self.smallInstructions.color[4] = 255 * self.alpha
+      self.smallInstructions:draw()
     end
   end
 end
@@ -154,6 +164,7 @@ end
 function UI:welcome()
   self.items = {}
   self.selected = 1
+  self.state = "welcome"
   self.title.text = "#LOLM7+1"
   
   if data.wave > 0 then
@@ -164,7 +175,9 @@ function UI:welcome()
     
     self:addItem(texts, function()
       self.world.player:applyLevels(data.attack, data.defence)
+      self.world.score = data.score
       self:deactivate()
+      self.state = nil
       delay(0.25, self.world.startWave, self.world, data.wave)
     end)
   end
@@ -172,6 +185,7 @@ function UI:welcome()
   self:addItem(Text:new{"Start\nNew Game", font = assets.fonts.main[24], align = "center", y = -24}, function() 
     self.world.player:applyLevels(0, 0)
     self:deactivate()
+    self.state = nil
     delay(0.25, self.world.startWave, self.world, 1)
   end)
   
@@ -181,6 +195,7 @@ end
 function UI:upgrades()
   self.items = {}
   self.selected = 1
+  self.state = "upgrades"
   self.title.text = "Pick an upgrade"
   
   local attack = Player.attackUpgrades[self.world.player.attackLvl + 1]
@@ -222,16 +237,22 @@ function UI:upgrades()
     })
   end
   
+  if self.world.player.shieldAllowed then
+    self.smallInstructions.text = "Don't forgot you can toggle your shield by pressing left and right together!"
+  end
+  
   self:activate()
 end
 
 function UI:death()
   self.items = {}
   self.selected = 1
+  self.state = "death"
   self.title.text = "Game over"
   
   self:addItem(Text:new{"Restart Wave", font = assets.fonts.main[18], align = "center", y = -11 }, function()
     self:deactivate()
+    self.world.score = data.score
     delay(0.25, self.world.startWave, self.world, self.world.waveNum)
   end)
   
@@ -246,11 +267,16 @@ function UI:death()
     delay(0.25, self.world.startWave, self.world, 1)
   end)
   
+  if self.world.player.shieldAllowed then
+    self.smallInstructions.text = "Don't forget you can toggle your shield by pressing left and right together!"
+  end
+  
   self:activate()
 end
 
 function UI:display(time, text, func)
   --self:activate()
+  self.state = "display"
   self.displayTxt.text = text
   
   delay(time, function() 
@@ -263,13 +289,19 @@ end
 function UI:startCountdown(callback)
   self.countdown = 3
   self.countdownScale = 1
+  self.state = "countdown"
+  playSound("voice-3")
   
   self:animate(1, { countdownScale = 0.3 }, ease.quadIn, function()
     self.countdown = 2
     self.countdownScale = 1
+    playSound("voice-2")
+    
     self:animate(1, { countdownScale = 0.3 }, ease.quadIn, function()
       self.countdown = 1
       self.countdownScale = 1
+      playSound("voice-1")
+      
       self:animate(1, { countdownScale = 0.3 }, ease.quadIn, function()
         self.countdown = 0
         callback()

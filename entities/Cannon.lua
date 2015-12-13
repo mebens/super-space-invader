@@ -22,6 +22,8 @@ function Cannon:initialize(x, y)
   self.shakeAmount = 5
   self.shakeTime = 0.3
   self.explosionSize = "large"
+  
+  self.score = 40
 end
 
 function Cannon:added()

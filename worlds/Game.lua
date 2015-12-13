@@ -8,10 +8,12 @@ function Game:initialize()
   self.bg = Background:new()
   self:add(self.player, self.ui, self.hud, self.bg)
   
+  self.score = 0
   self.shakeTimer = 0
   self.wait = 0
   self.repetitions = 0
   self.inWave = false
+  
   self:setupLayers{
     [1] = { 1, pre = postfx.exclude, post = postfx.include }, -- UI
     [2] = 1, -- particles
@@ -102,20 +104,28 @@ function Game:endWave()
   self.inWave = false
   self.ui:upgrades()
   self:fadeMusic()
+  data.saveHiscore(self.score)
 end
 
 function Game:onDeath()
+  if self.score > data.hiscore then print('yay') end
   self.ui:death()
   self:shake(0.5, 4)
   self.inWave = false
   self:fadeMusic()
+  data.saveHiscore(self.score)
+end
+
+function Game:addScore(amount)
+  if not self.inWave then return end
+  self.score = self.score + amount
 end
 
 function Game:completeUpgrade(attack, defence)
   if attack then self.player.attackLvl = attack end
   if defence then self.player.defenceLvl = defence end
   self.player:applyLevels()
-  data.save(self.waveNum + 1, self.player.attackLvl, self.player.defenceLvl)
+  data.save(self.waveNum + 1, self.score, self.player.attackLvl, self.player.defenceLvl)
 end
 
 function Game:shake(time, amount)
@@ -164,7 +174,7 @@ function Game:wave1(i, r)
       return 2, 0
     end
   elseif i == 2 then
-    Pawn.crissCross(3, 0.5)
+    Pawn.crissCross(3, 1)
     self.wait = "enemies"
     return 3
   elseif i == 3 then
@@ -183,7 +193,7 @@ function Game:wave2(i, r)
     self:add(Pawn:new(self:randomX(Pawn)))
     self.wait = math.random(9, 15) / 10
     
-    if r < 9 then
+    if r < 7 then
       return 1, 1
     else
       return 2, 0
@@ -197,7 +207,7 @@ function Game:wave2(i, r)
     
     self.wait = "enemies"
     
-    if r < 3 then
+    if r < 2 then
       return 2, 1
     else
       return 3, 0
@@ -208,7 +218,7 @@ function Game:wave2(i, r)
   elseif i == 4 then
     Dart.firingSquad(5, 0.5, 1)
     
-    if r < 3 then
+    if r < 2 then
       self.wait = 5
       return 4, 1
     else
@@ -229,11 +239,87 @@ function Game:wave3(i, r)
   if i == 0 then
     return 1
   elseif i == 1 then
-    self:add(Cannon:new(love.graphics.width / 2))
-    Dart.firingSquad(5, 0.5, 1)
     Fighter.sideSquadron(5, 2)
     self.wait = "enemies"
-    return 1
+    return 2
+  elseif i == 2 then
+    if math.random(1, 2) == 1 then
+      Pawn.line(6, 1, 40)
+      Pawn.line(6, 2, 40)
+    else
+      Pawn.circle(6, 50, love.graphics.width * .25, math.tau * .6, 60)
+      Pawn.circle(6, 50, love.graphics.width * .75, math.tau * .6, 60)
+    end
+    
+    self.wait = "enemies"
+    
+    if r < 3 then
+      return 2, 1
+    else
+      return 3, 0
+    end
+  elseif i == 3 then
+    if math.random(1, 2) == 1 then
+      Fighter.sideSquadron(1, 1)
+    else
+      Dart.firingSquad(3, 1, 2)
+    end
+    
+    self:add(Cannon:new(love.graphics.width * .2))
+    self:add(Cannon:new(love.graphics.width * .8))
+    self.wait = "enemies"
+    return 4
+  elseif i == 4 then
+    return nil
   end
+end
+
+function Game:wave4(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Pawn.line(8, 1, 30)
+    Pawn.line(8, 3, 30)
+    self.wait = "enemies"
+    return 2
+  elseif i == 2 then
+    Fighter.sideSquadron(5, 3)
+    return 3
+  elseif i == 3 then
+    Dart.line(math.random(4, 6))
+    self.wait = 5
+    
+    if r < 3 then
+      return 3, 1
+    else
+      return 4, 0
+    end
+  elseif i == 4 then
+    Pawn.diagonal(6, 1, Pawn.height * 2)
+    Pawn.diagonal(6, -1, Pawn.height * 2)
+    return 5
+  elseif i == 5 then
+    self:add(Fighter:new(math.random(Enemy.padX * 2, love.graphics.width - Enemy.padX * 2)))
+    self.wait = 2
+    
+    if r < 4 then
+      return 5, 1
+    else
+      return 6, 0
+    end
+  elseif i == 6 then
+    Fighter.sideSquadron(3, 1)
+    self.wait = "enemies"
+    return 7
+  elseif i == 7 then
+    return nil
+  end
+end
+
+function Game:wave5(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    
 end
   
