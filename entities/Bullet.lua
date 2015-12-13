@@ -4,7 +4,7 @@ Bullet.static.all = LinkedList:new("_nextBullet", "_prevBullet")
 function Bullet:initialize(x, y, speed)
   Entity.initialize(self, x, y)
   self.layer = 4
-  self.width = 2
+  self.width = 1
   self.height = 10
   self.speed = speed or 400
   self.damage = 50
@@ -24,7 +24,7 @@ end
 function Bullet:update(dt)
   self.y = self.y - self.speed * dt
   self.shape:moveTo(self.x, self.y)
-  if self.y < -self.height then self.world = nil end
+  if self.y < -self.height / 2 then self.world = nil end
   -- check for collision with enemies
 end
 

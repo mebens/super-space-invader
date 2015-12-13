@@ -8,6 +8,7 @@ function Dart.static.firingSquad(cols, time, reps, ySpeed)
   local x = Enemy.padX + Dart.width / 2
   
   local function fire()
+    if not ammo.world.inWave then return end
     ammo.world:add(Dart:new(x, y, ySpeed))
     
     if i % cols == 0 then
@@ -30,8 +31,40 @@ function Dart:initialize(x, y, ySpeed)
   Enemy.initialize(self, x, y)
   self.width = Dart.width
   self.height = Dart.height
+  self.image = assets.images.dart
   self.ySpeed = ySpeed or 500
   self.health = 40
   self.respawn = false
-  self.color = { 0, 0, 220 }
+  self.color = { 0, 180, 220 }
+  self.factor = 3
+  
+  self.ps = love.graphics.newParticleSystem(Enemy.rageParticle, 200)
+  self.ps:setLinearAcceleration(0, 50)
+  self.ps:setDirection(0)
+  self.ps:setSpread(math.tau)
+  self.ps:setSpeed(3, 6)
+  self.ps:setParticleLifetime(2, 3)
+  self.ps:setEmissionRate(50)
+  self.ps:setEmitterLifetime(-1)
+  self.ps:setRelativeRotation(true)
+  --self.ps:setAreaSpread("normal", self.width / 3, 0)
+  local r, g, b = unpack(self.color)
+  self.ps:setColors(r, g, b, 255, r, g, b, 0)
+  self.ps:start()
+end
+
+function Dart:update(dt)
+  if self.dead then
+    self.ps:stop()
+    self.haltRemoval = self.ps:getCount() > 0
+  end
+  
+  self.ps:moveTo(self.x, self.y)
+  self.ps:update(dt)
+  Enemy.update(self, dt)
+end
+
+function Dart:draw()
+  love.graphics.draw(self.ps)
+  Enemy.draw(self)
 end

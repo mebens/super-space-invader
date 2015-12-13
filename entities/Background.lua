@@ -11,7 +11,7 @@ function Background:initialize()
   self.close2 = love.graphics.newCanvas(love.graphics.width, love.graphics.height)
   self.farRate = 7
   self.midRate = 30
-  self.closeRate = 80
+  self.closeRate = 120
   self.farOffset = 0
   self.midOffset = 0
   self.closeOffset = 0

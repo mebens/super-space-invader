@@ -30,14 +30,12 @@ function UI:initialize()
 end
 
 function UI:update(dt)
+  if input.pressed("select") then self:select() end
+  
   if input.down("left") and input.down("right") then
-    if self.selectTimer >= self.selectTime or input.pressed("select") then
-      local item = self.items[self.selected]
-      if not instanceOf(Text, item) then item = item[1] end
-      local result = item.select()
-      if result ~= true then self:deactivate() end
-      self.selectTimer = 0
-    elseif self.selectTimer < self.selectTime then
+    if self.selectTimer >= self.selectTime then
+      self:select()
+    else
       self.selectTimer = self.selectTimer + dt
     end
   else
@@ -77,7 +75,13 @@ function UI:draw()
     for i, item in ipairs(self.items) do
       local x = self.outsidePadding + (width + self.insidePadding) * (i - 1)
       local y = love.graphics.height / 2 - self.height / 2
-      love.graphics.setColor(148, 228, 255, (i == self.selected and 200 or 100) * self.alpha)
+      local alpha = 100
+      
+      if i == self.selected then
+        alpha = self.selectTimer > 0 and 240 or 200
+      end
+      
+      love.graphics.setColor(148, 228, 255, alpha * self.alpha)
       love.graphics.rectangle("fill", x, y, width, self.height)
       
       if instanceOf(Text, item) then
@@ -103,6 +107,14 @@ function UI:draw()
       self.instructions:draw()
     end
   end
+end
+
+function UI:select()
+  local item = self.items[self.selected]
+  if not instanceOf(Text, item) then item = item[1] end
+  local result = item.select()
+  if result ~= true then self:deactivate() end
+  self.selectTimer = 0
 end
 
 function UI:activate()
@@ -140,12 +152,15 @@ function UI:welcome()
     
     self:addItem(texts, function()
       self.world.player:applyLevels(data.attack, data.defence)
-      self.world:startWave(data.wave)
+      self:deactivate()
+      delay(0.25, self.world.startWave, self.world, data.wave)
     end)
   end
   
   self:addItem(Text:new{"Start\nNew Game", font = assets.fonts.main[24], align = "center", y = -24}, function() 
-    self.world:startWave(1)
+    self.world.player:applyLevels(0, 0)
+    self:deactivate()
+    delay(0.25, self.world.startWave, self.world, 1)
   end)
   
   self:activate()
@@ -194,6 +209,30 @@ function UI:upgrades()
       Text:new{"You've completed every defence upgrade", font = assets.fonts.main[12], align = "center", y = 5}
     })
   end
+  
+  self:activate()
+end
+
+function UI:death()
+  self.items = {}
+  self.selected = 1
+  self.title.text = "Game over"
+  
+  self:addItem(Text:new{"Restart Wave", font = assets.fonts.main[18], align = "center", y = -11 }, function()
+    self:deactivate()
+    delay(0.25, self.world.startWave, self.world, self.world.waveNum)
+  end)
+  
+  local texts = {
+    Text:new{"Restart Game", font = assets.fonts.main[18], align = "center", y = -11 },
+    Text:new{"Overwrites saved data", font = assets.fonts.main[12], align = "center", y = 13 }
+  }
+  
+  self:addItem(texts, function()
+    self.world.player:applyLevels(0, 0)
+    self:deactivate()
+    delay(0.25, self.world.startWave, self.world, 1)
+  end)
   
   self:activate()
 end

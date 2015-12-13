@@ -5,9 +5,34 @@ function collide(e1, e2)
     and e1.y - e1.height / 2 < e2.y + e2.height / 2
 end
 
-function circleToRect(e1, e2)
-  local pointInRect = e1.x >= e2.x - e2.width / 2
-    and e1.x <= e2.x + e2.width / 2
-    and e1.y >= e2.y - e2.height / 2
-    and e1.y <= e2.y + e2.height / 2
+function Entity:drawImage(image, x, y, color, ox, oy)
+  image = image or self.image
+  color = color or self.color
+  if color then love.graphics.setColor(color) end
+  local imageScale = self.imageScale or 2
+  local scale = imageScale * self.scale
+  angle = self.angle
+  if self.drawPerpAngle then angle = angle + math.tau / 4 end
+
+  love.graphics.draw(
+    image,
+    x or self.x,
+    y or self.y,
+    angle,
+    scale,
+    scale,
+    ox or image:getWidth() / 2,
+    oy or image:getHeight() / 2
+  )
+end
+
+function Entity:drawMap(map, x, y, color, ox, oy)
+  map = map or self.map
+  color = color or self.color
+  angle = self.angle
+  if self.drawPerpAngle then angle = angle + math.tau / 4 end
+  if color then love.graphics.setColor(color) end
+  local imageScale = self.imageScale or 2
+  local scale = imageScale * self.scale
+  map:draw(x or self.x, y or self.y, angle, scale, scale, ox or map.width / 2, oy or map.height / 2)
 end

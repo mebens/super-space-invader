@@ -1,14 +1,15 @@
 FighterBullet = class("FighterBullet", Entity)
+--FighterBullet.static.image
 
 function FighterBullet:initialize(x, y, angle)
   Entity.initialize(self, x, y)
   self.angle = angle
-  self.layer = 4
+  self.layer = 3
   self.width = 1
   self.height = 10
   self.speed = 300
   self.damage = 40
-  self.color = { 200, 200, 200 }
+  self.color = { 200, 200, 0 }
 end
 
 function FighterBullet:added()

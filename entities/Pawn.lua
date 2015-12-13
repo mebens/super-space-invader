@@ -62,6 +62,7 @@ function Pawn.static.crissCross(num, time, xSpeed, ySpeed)
   local i = 1
   
   local function spawn()
+    if not ammo.world.inWave then return end
     ammo.world:add(Pawn:new(Enemy.padX + Pawn.width / 2, y, xSpeed, ySpeed))
     ammo.world:add(Pawn:new(love.graphics.width - Enemy.padX - Pawn.width / 2, y, xSpeed, ySpeed))
     i = i + 1
@@ -75,7 +76,17 @@ function Pawn:initialize(x, y, xSpeed, ySpeed)
   Enemy.initialize(self, x, y or Enemy.spawnY - Pawn.height)
   self.width = Pawn.width
   self.height = Pawn.height
+  self.map = Spritemap:new(assets.images.pawn, 10, 10)
+  self.map:add("idle", { 1, 1, 2, 3, 4, 4, 3, 2 }, 10, true)
+  self.map:add("rage", { 1, 1, 2, 3, 4, 4, 3, 2 }, 20, true)
+  self.map:play("idle")
   self.xSpeed = xSpeed or 0
   self.ySpeed = ySpeed or 100
   self.color = { 0, 220, 0 }
+  self.factor = 4
+end
+
+function Pawn:enableRage()
+  Enemy.enableRage(self)
+  self.map:play("rage")
 end

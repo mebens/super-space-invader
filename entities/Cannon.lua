@@ -1,5 +1,5 @@
 Cannon = class("Cannon", Enemy)
-Cannon.static.width = 35
+Cannon.static.width = 36
 Cannon.static.height = 40
 
 function Cannon:initialize(x, y)
@@ -9,13 +9,18 @@ function Cannon:initialize(x, y)
   self.health = 350
   self.ySpeed = 50
   self.contactDamage = 150
+  self.map = Spritemap:new(assets.images.cannon, 18, 20)
+  self.map:add("fire", { 4, 7, 6, 5, 4, 3, 2, 1 }, 20, false)
   
   self.minShot = 5
   self.maxShot = 8
-  self.shotRange = math.tau / 8
+  self.shotRange = math.tau / 12
   self.shootInterval = 1.5
   self.shootTimer = self.shootInterval
   self.color = { 220, 220, 220 }
+  self.factor = 9
+  self.shakeAmount = 5
+  self.shakeTime = 0.3
 end
 
 function Cannon:update(dt)
@@ -26,10 +31,11 @@ function Cannon:update(dt)
     self.shootTimer = self.shootTimer - dt
   else
     self.shootTimer = self.shootInterval
+    self.map:play("fire")
     
     for i = 1, math.random(self.minShot, self.maxShot) do
       local randomAngle = math.tau / 4 + self.shotRange * math.random() - self.shotRange / 2
-      self.world:add(CannonShot:new(self.x, self.y, randomAngle))
+      self.world:add(CannonShot:new(self.x, self.y + 6, randomAngle))
     end
   end
 end

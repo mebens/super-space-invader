@@ -1,5 +1,5 @@
 CannonShot = class("CannonShot", Entity)
-CannonShot.static.radius = 3
+CannonShot.static.radius = 4
 
 function CannonShot:initialize(x, y, angle)
   Entity.initialize(self, x, y)

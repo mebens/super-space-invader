@@ -8,6 +8,7 @@ function Game:initialize()
   self.bg = Background:new()
   self:add(self.player, self.ui, self.hud, self.bg)
   
+  self.shakeTimer = 0
   self.wait = 0
   self.repetitions = 0
   self.inWave = false
@@ -16,18 +17,33 @@ function Game:initialize()
     [2] = 1, -- particles
     [3] = 1, -- player / enemies
     [4] = 1, -- bullets
+    [5] = 1, -- rage buffer
     [6] = 1 -- background
   }
 end
 
 function Game:start()
-  for v in self._layers[1]:iterate() do print(v) end
   self.ui:welcome()
 end
 
 function Game:update(dt)
   World.update(self, dt)
   
+  if self.shakeTimer > 0 then
+    self.shakeTimer = self.shakeTimer - dt
+    
+    if self.camera.x == 0 then
+      self.camera.x = self.shakeAmount * (1 - 2 * math.random(0, 1))
+      self.camera.y = self.shakeAmount * (1 - 2 * math.random(0, 1))
+    else
+      self.camera.x = 0
+      self.camera.y = 0
+    end
+  else
+    self.camera.x = 0
+    self.camera.y = 0
+  end
+      
   if self.inWave then
     if self.wait == "enemies" then
       if Enemy.all.length == 0 then self.wait = 0 end
@@ -52,12 +68,17 @@ function Game:update(dt)
 end
 
 function Game:startWave(num)
+  for e in Enemy.all:iterate() do e:die(true, true) end
+  self.player:reset()
+  
   self.ui:display(1, "Wave " .. num, function()
     self.ui:startCountdown(function()
+      self.player:reset()
       self.inWave = true
       self.waveIndex = 1
+      self.repetitions = 0
+      self.wait = 0
       self.waveNum = num
-      self.player:reset()
     end)
   end)
 end
@@ -73,11 +94,25 @@ function Game:endWave()
   self.ui:upgrades()
 end
 
+function Game:onDeath()
+  self.ui:death()
+  self:shake(0.5, 4)
+  self.inWave = false
+end
+
 function Game:completeUpgrade(attack, defence)
   if attack then self.player.attackLvl = attack end
   if defence then self.player.defenceLvl = defence end
   self.player:applyLevels()
   data.save(self.waveNum + 1, self.player.attackLvl, self.player.defenceLvl)
+end
+
+function Game:shake(time, amount)
+  amount = amount or 2
+  if self.shakeTimer <= 0 or amount >= self.shakeAmount then
+    self.shakeTimer = time
+    self.shakeAmount = amount
+  end
 end
 
 function Game:randomX(class)
@@ -159,6 +194,18 @@ function Game:wave2(i, r)
     return 6
   elseif i == 6 then
     return nil
+  end
+end
+
+function Game:wave3(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    self:add(Cannon:new(love.graphics.width / 2))
+    Dart.firingSquad(5, 0.5, 1)
+    Fighter.sideSquadron(5, 2)
+    self.wait = "enemies"
+    return 1
   end
 end
   

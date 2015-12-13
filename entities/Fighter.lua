@@ -1,6 +1,6 @@
 Fighter = class("Fighter", Enemy)
 Fighter.static.width = 20
-Fighter.static.height = 15
+Fighter.static.height = 14
 
 function Fighter.static.sideSquadron(num, time, sides, guns, strafe)
   local y = Enemy.spawnY - Fighter.height
@@ -8,6 +8,7 @@ function Fighter.static.sideSquadron(num, time, sides, guns, strafe)
   sides = sides or 0
   
   local function spawn()
+    if not ammo.world.inWave then return end
     if sides == 0 or sides == 1 then
       ammo.world:add(Fighter:new(love.graphics.width - Enemy.padX - Fighter.width / 2, y, guns, strafe))
     end
@@ -36,12 +37,16 @@ function Fighter:initialize(x, y, guns, strafe)
   self.strafeTime = 0.8
   self.strafing = false
   
-  self.guns = guns or 2
   self.shootInterval = 0.7
   self.shootTimer = self.shootInterval
   self.contactDamage = 50
   self.respawn = false
   self.color = { 220, 220, 0 }
+  self.factor = 4
+  self.drawPerpAngle = true
+  
+  self.map = Spritemap:new(assets.images.fighter, 10, 7)
+  self.map:add("fire", { 2, 3, 3, 2, 2, 1 }, 20, false)
 end
 
 function Fighter:update(dt)
@@ -78,21 +83,17 @@ function Fighter:update(dt)
 end
 
 function Fighter:shoot()
-  if self.guns == 1 or self.guns == 3 then
-    self.world:add(FighterBullet:new(self.x, self.y, self.angle))
-  end
+  self.world:add(FighterBullet:new(
+    self.x + math.cos(self.angle + math.tau / 4) * (self.width / 2 - 1), 
+    self.y + math.sin(self.angle + math.tau / 4) * (self.width / 2 - 1), 
+    self.angle
+  ))
   
-  if self.guns == 2 or self.guns == 3 then
-    self.world:add(FighterBullet:new(
-      self.x + math.cos(self.angle + math.tau / 4) * self.width / 2, 
-      self.y + math.sin(self.angle + math.tau / 4) * self.width / 2,
-      self.angle
-    ))
-    
-    self.world:add(FighterBullet:new(
-      self.x + math.cos(self.angle - math.tau / 4) * self.width / 2, 
-      self.y + math.sin(self.angle - math.tau / 4) * self.width / 2,
-      self.angle
-    ))
-  end
+  self.world:add(FighterBullet:new(
+    self.x + math.cos(self.angle - math.tau / 4) * (self.width / 2 - 1), 
+    self.y + math.sin(self.angle - math.tau / 4) * (self.width / 2 - 1),
+    self.angle
+  ))
+  
+  self.map:play("fire")
 end
