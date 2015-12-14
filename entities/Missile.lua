@@ -34,11 +34,6 @@ function Missile:added()
   self.fireSound = playRandom{"fire-missile1", "fire-missile2"}
 end
 
-function Missile:removed()
-  Missile.all:remove(self)
-  HC.remove(self.shape)
-end
-
 function Missile:update(dt)
   self.ps:update(dt)
   
@@ -104,6 +99,8 @@ function Missile:die(explosion)
   self.fireSound:stop()
   if self.engineSound then self.engineSound:stop() end
   self.ps:stop()
+  Missile.all:remove(self)
+  HC.remove(self.shape)
   if explosion == nil then explosion = true end
   
   if explosion then

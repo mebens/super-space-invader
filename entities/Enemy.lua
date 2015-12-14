@@ -105,6 +105,7 @@ function Enemy:update(dt)
   
   if self.shape:collidesWith(self.world.player.shape) then
     self.world.player:damage(self.contactDamage)
+    self:sendScore()
     self:die()
   end
   
@@ -175,6 +176,7 @@ function Enemy:damage(amount)
   self.health = self.health - amount
   
   if self.health <= 0 then
+    self:sendScore()
     self:die()
   else
     playRandom({"hit1", "hit2", "hit3"}, 0.6)
@@ -184,7 +186,6 @@ end
 function Enemy:die(explosion, delayRemove)
   if self.dead then return end
   HC.remove(self.shape)
-  self.world:addScore(self.score + (self.rageMode and 5 or 0))
   
   if delayRemove then
     delay(0, Enemy.all.remove, Enemy.all, self)
@@ -220,6 +221,10 @@ function Enemy:die(explosion, delayRemove)
       playRandom{"small-explosion1", "small-explosion2", "small-explosion3", "small-explosion4", "small-explosion5"}
     end
   end
+end
+
+function Enemy:sendScore()
+  self.world:addScore(self.score + (self.rageMode and 5 or 0))
 end
 
 function Enemy:setAnchor(anchor)

@@ -1,5 +1,4 @@
 FighterBullet = class("FighterBullet", Entity)
---FighterBullet.static.image
 
 function FighterBullet:initialize(x, y, angle)
   Entity.initialize(self, x, y)
@@ -39,11 +38,8 @@ function FighterBullet:update(dt)
 end
 
 function FighterBullet:draw()
-  love.graphics.storeColor()
   love.graphics.setColor(self.color)
-  self.shape:draw()
-  --love.graphics.rectangle("fill", self.x - self.width / 2, self.y - self.height / 2, self.width, self.height)
-  love.graphics.resetColor()
+  love.graphics.draw(Bullet.canvas, self.x, self.y, self.angle + math.tau / 4, 1, 1, self.width / 2, self.height / 2)
 end
 
 function FighterBullet:die()

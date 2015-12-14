@@ -25,6 +25,7 @@ require("entities.Cannon")
 require("entities.CannonShot")
 require("entities.Battleship")
 require("entities.BattleshipShot")
+require("entities.BattleshipGuns")
 require("entities.Anchor")
 require("entities.Background")
 require("worlds.Game")
@@ -85,6 +86,7 @@ function love.load()
   assets.loadSfx("shield-hit1.ogg", 0.7)
   assets.loadSfx("shield-hit2.ogg", 0.7)
   assets.loadSfx("voice-shield-ready.ogg", 0.7)
+  assets.loadSfx("voice-shield-broken.ogg", 0.8)
   assets.loadSfx("voice-1.ogg", 0.4)
   assets.loadSfx("voice-2.ogg", 0.4)
   assets.loadSfx("voice-3.ogg", 0.4)
@@ -96,6 +98,7 @@ function love.load()
   input.define{"right", key = { "right", "d" }, mouse = "r"}
   input.define("select", "return", " ")
   input.define("quit", "q")
+  input.define("pause", "p")
   
   postfx.init()
   postfx.scale = 2
@@ -107,9 +110,13 @@ function love.load()
   love.graphics.height = love.graphics.height / 2
   love.mouse.setVisible(false)
   ammo.world = Game:new()
+  
+  paused = false
 end
 
 function love.update(dt)
+  if paused then return end
+
   postfx.update(dt)
   ammo.update(dt)
   if input.released("quit") then love.event.quit() end
@@ -121,6 +128,13 @@ function love.draw()
   ammo.draw()
   postfx.stop()
   
-  love.graphics.setFont(assets.fonts.main[12])
-  love.graphics.printf(love.timer.getFPS(), 4, 4, love.graphics.width * 2 - 8, "right")
+  if paused then
+    love.graphics.setFont(assets.fonts.main[24])
+    love.graphics.printf("Paused", 0, love.graphics.height, love.graphics.width * 2, "center")
+  end
+end
+
+function love.keypressed(key)
+  input.keypressed(key)
+  if key == "p" then paused = not paused end
 end

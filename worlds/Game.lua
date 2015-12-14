@@ -16,10 +16,10 @@ function Game:initialize()
   
   self:setupLayers{
     [1] = { 1, pre = postfx.exclude, post = postfx.include }, -- UI
-    [2] = 1, -- particles
+    [2] = 1, -- battleship guns
     [3] = 1, -- player / enemies
     [4] = 1, -- bullets
-    [5] = 1, -- rage buffer
+    [5] = 1, -- blank
     [6] = 1 -- background
   }
 end
@@ -59,7 +59,13 @@ function Game:update(dt)
     elseif self.wait > 0 then
       self.wait = self.wait - dt
     else
-      local index, rep = self["wave" .. self.waveNum](self, self.waveIndex, self.repetitions)
+      local index, rep
+      
+      if self.waveNum < 13 then
+        index, rep = self["wave" .. self.waveNum](self, self.waveIndex, self.repetitions)
+      else
+        index, rep = self:waveInfinite(self.waveIndex, self.repetitions)
+      end
       
       if index == nil then
         self:endWave()
@@ -79,8 +85,17 @@ end
 function Game:startWave(num)
   for e in Enemy.all:iterate() do e:die(true, true) end
   self.player:reset()
+  if num == 13 then self.player:applyLevels(6, 7) end
   
-  self.ui:display(1, "Wave " .. num, function()
+  local text
+  
+  if num < 13 then
+    text = "Wave " .. num
+  else
+    text = "Infinite Wave"
+  end
+  
+  self.ui:display(1, text, function()
     delay(2.5, self.fadeMusic, self)
     
     self.ui:startCountdown(function()
@@ -95,9 +110,9 @@ function Game:startWave(num)
 end
 
 function Game:nextWave()
-  if self["wave" .. (self.waveNum + 1)] then
-    self:startWave(self.waveNum + 1)
-  end
+  local waveNum = self.waveNum + 1
+  if waveNum > 13 then waveNum = 13 end
+  self:startWave(waveNum)
 end
 
 function Game:endWave()
@@ -107,9 +122,19 @@ function Game:endWave()
   data.saveHiscore(self.score)
 end
 
+function Game:startSandbox()
+  self.sandbox = true
+  self:startWave(13)
+end
+
 function Game:onDeath()
-  if self.score > data.hiscore then print('yay') end
-  self.ui:death()
+  if self.sandbox then
+    self.ui:welcome()
+    self.sandbox = false
+  else
+    self.ui:death()
+  end
+  
   self:shake(0.5, 4)
   self.inWave = false
   self:fadeMusic()
@@ -320,7 +345,509 @@ function Game:wave5(i, r)
   if i == 0 then
     return 1
   elseif i == 1 then
+    Pawn.crissCross(10, 1)
+    return 2
+  elseif i == 2 then
+    if math.random(1, 2) == 1 then
+      Dart.line(5)
+    else
+      Dart.firingSquad(5, 0.5)
+    end
+    
+    if r < 3 then
+      self.wait = 2
+      return 2, 1
+    else
+      self.wait = "enemies"
+      return 3, 0
+    end
+  elseif i == 3 then
     self:add(Battleship:new(love.graphics.width / 2))
+    self.wait = "enemies"
+    return 4
+  end
+end
+
+function Game:wave6(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Pawn.crissCross(5, 1)
+    self.wait = 3
+    return 2
+  elseif i == 2 then
+    Pawn.circle(15, love.graphics.width * .7, love.graphics.width / 2, math.tau / 4)
+    self.wait = 6
+    return 3
+  elseif i == 3 then
+    Fighter.sideSquadron(5, 3)
+    return 4
+  elseif i == 4 then
+    Fighter.circle(6, 60, love.graphics.width / 2, math.tau * .75, 100, 100)
+    self.wait = 6
+    
+    if r < 2 then
+      return 4, 1
+    else
+      return 5, 0
+    end
+  elseif i == 5 then
+    self:add(Cannon:new(love.graphics.width * .25))
+    self:add(Cannon:new(love.graphics.width * .75))
+    self.wait = "enemies"
+    return 6
+  end
+end
+
+function Game:wave7(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Fighter.circle(5, 60, love.graphics.width * .25)
+    Fighter.circle(5, 60, love.graphics.width * .75)
+    return 2
+  elseif i == 2 then
+    local p = Pawn:new(self:randomX(Pawn))
+    p.ySpeed = 150
+    self:add(p)
+    
+    if r < 7 then
+      self.wait = math.random(5, 10) / 10
+      return 2, 1
+    else
+      self.wait = "enemies"
+      return 3, 0
+    end
+  elseif i == 3 then
+    local c = Cannon:new(love.graphics.width * .5)
+    c.health = 500
+    self:add(c)
+    Fighter.sideSquadron(6, 1.5)
+    self.wait = "enemies"
+    return 4
+  elseif i == 4 then
+    Dart.firingSquad(8, 0.5)
+    self.wait = 1
+    return 5
+  elseif i == 5 then
+    local a = Anchor:new(love.graphics.width / 2, Enemy.spawnY - 150, 150, 50)
+    local a1 = Pawn.circle(10, 50)
+    local a2 = Pawn.circle(10, 50)
+    local a3 = Pawn.circle(10, 50)
+    a1:setAnchor(a, 0, math.tau / 4)
+    a2:setAnchor(a, math.tau / 3, math.tau / 4)
+    a3:setAnchor(a, math.tau * (2/3), math.tau / 4)
+    self:add(a)
+    self.wait = "enemies"
+    return 6
+  end
+end
+
+function Game:wave8(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Pawn.crissCross(30, 1, 100, 150)
+    return 2
+  elseif i == 2 then
+    self:add(Cannon:new(love.graphics.width * .5, nil, 100))
+    
+    if r < 5 then
+      self.wait = 7
+      return 2, 1
+    else
+      self.wait = "enemies"
+      return 3, 0
+    end
+  elseif i == 3 then
+    local a = Anchor:new(love.graphics.width / 2, Enemy.spawnY - 150, 150, 50)
+    local a1 = Pawn.circle(10, 50)
+    local a2 = Pawn.circle(10, 50)
+    a1:setAnchor(a, 0, math.tau / 4)
+    a2:setAnchor(a, math.tau / 2, math.tau / 4)
+    self:add(a)
+    return 4
+  elseif i == 4 then
+    self:add(Cannon:new(love.graphics.width * .5, nil, 100))
+    
+    if r < 3 then
+      self.wait = 6
+      return 4, 1
+    else
+      self.wait = "enemies"
+      return 5, 0
+    end
+  elseif i == 5 then
+    Fighter.line(5, 100, math.random(0, 1) == 1 and true or false)
+    Pawn.crissCross(3, 1, 100, 150)
+    
+    if r < 3 then
+      self.wait = 5
+      return 5, 1
+    else
+      self.wait = "enemies"
+      return 6
+    end
+  end
+end
+
+function Game:wave9(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Pawn.crissCross(20, 1, 100, 100)
+    return 2
+  elseif i == 2 then
+    if math.random(0, 1) == 0 then
+      Fighter.circle(8, 60)
+    else
+      Fighter.line(4)
+    end
+    
+    if r < 6 then
+      self.wait = 3
+      return 2, 1
+    else
+      self.wait = "enemies"
+      return 3, 0
+    end
+  elseif i == 3 then
+    self:add(Cannon:new(love.graphics.width * .25, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .75, nil, 100))
+    self.wait = 1
+    return 4
+  elseif i == 4 then
+    Dart.firingSquad(6)
+    
+    if r < 4 then
+      self.wait = 5
+      return 3, 1
+    else
+      return 5, 0
+    end
+  elseif i == 5 then
+    Pawn.crissCross(10, 0.75, 100, 150)
+    self.wait = "enemies"
+    return 6
+  end
+end
+
+function Game:wave10(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Fighter.line(4)
+    Pawn.diagonal(8, 1 - 2 * math.random(0, 1))
+    
+    if r < 4 then
+      self.wait = 5
+      return 1, 1
+    else
+      self.wait = "enemies"
+      return 2, 0
+    end
+  elseif i == 2 then
+    self:add(Cannon:new(love.graphics.width * .25, nil, 70))
+    self:add(Cannon:new(love.graphics.width * .75, nil, 70))
+    self.wait = 3
+    
+    if r < 3 then
+      return 2, 1
+    else
+      return 3, 0
+    end
+  elseif i == 3 then
+    local a = Anchor:new(love.graphics.width / 2, Enemy.spawnY - 150, 150, 50)
+    local a1 = Fighter.circle(7, 50)
+    local a2 = Fighter.circle(7, 50)
+    a1:setAnchor(a, 0, math.tau / 4)
+    a2:setAnchor(a, math.tau / 2, math.tau / 4)
+    self:add(a)
+    self.wait = "enemies"
+    return 4
+  elseif i == 4 then
+    self.wait = 2
+    return 5
+  elseif i == 5 then
+    local bs = Battleship:new(love.graphics.width / 2, 5000)
+    self:add(bs)
+    self.wait = "enemies"
+    return 6
+  end
+end
+
+function Game:wave11(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Pawn.crissCross(30, 0.6, 100, 100)
+    self.wait = 2
+    return 2
+  elseif i == 2 then
+    Fighter.line(5)
+    self.wait = 5
+    
+    if r < 4 then
+      return 2, 1
+    else 
+      return 3, 0
+    end
+  elseif i == 3 then
+    self:add(Cannon:new(love.graphics.width * .25, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .5, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .75, nil, 100))
+    self.wait = "enemies"
+    return 4
+  elseif i == 4 then
+    local t = math.random(1, 4)
+    
+    if t == 1 then
+      Fighter.circle(10, 70)
+    elseif t == 2 then
+      Pawn.line(10, 1, 120)
+      Pawn.line(10, 3, 120)
+    elseif t == 3 then
+      local a = Anchor:new(love.graphics.width / 2, Enemy.spawnY - 150, 150, 50)
+      local a1 = Pawn.circle(10, 50)
+      local a2 = Pawn.circle(10, 50)
+      a1:setAnchor(a, 0, math.tau / 4)
+      a2:setAnchor(a, math.tau / 2, math.tau / 4)
+      self:add(a)
+    elseif t == 4 then
+      Dart.line(5)
+    end
+    
+    if r < 8 then
+      self.wait = 4
+      return 4, 1
+    else
+      self.wait = "enemies"
+      return 5, 0
+    end
+  elseif i == 5 then
+    self.wait = 2
+    return 6
+  elseif i == 6 then
+    self:add(Pawn:new(self:randomX(Pawn)))
+    self.wait = "enemies"
+    return 7
+  end
+end
+
+function Game:wave12(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    Pawn.line(10, 1, 120)
+    Pawn.line(10, 3, 120)
+    
+    if r > 2 then
+      local a = Anchor:new(love.graphics.width / 2, Enemy.spawnY - 150, 150, 50)
+      local a1 = Fighter.circle(6, 60)
+      local a2 = Fighter.circle(6, 60)
+      a1:setAnchor(a, 0, math.tau / 4)
+      a2:setAnchor(a, math.tau / 2, math.tau / 4)
+      self:add(a)
+    else
+      Fighter.circle(10, 70, love.graphics.width / 3)
+      Fighter.circle(10, 70, love.graphics.width * (2/3))
+    end
+    
+    if r < 3 then
+      self.wait = 10
+      return 1, 1
+    else
+      self.wait = "enemies"
+      return 2, 0
+    end
+  elseif i == 2 then
+    self:add(Cannon:new(love.graphics.width * .25, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .5, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .75, nil, 100))
+    
+    if math.random(1, 2) == 1 then
+      Fighter.line(2)
+    else
+      Dart.line(8)
+    end
+    
+    if r < 2 then
+      self.wait = 5
+      return 2, 1
+    else
+      self.wait = "enemies"
+      return 3, 0
+    end
+  elseif i == 3 then
+    Pawn.crissCross(15, 1)
+    return 4
+  elseif i == 4 then
+    self:add(Cannon:new(love.graphics.width * .25, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .75, nil, 100))
+    
+    if r < 2 then
+      self.wait = 4
+      return 4, 1
+    else
+      self.wait = "enemies"
+      return 5, 0
+    end
+  elseif i == 5 then
+    self.bs = Battleship:new(love.graphics.width / 2, 5000)
+    self:add(self.bs)
+    return 6
+  elseif i == 6 then
+    if self.bs.dead then
+      for e in Enemy.all:iterate() do
+        e:die(true, true)
+      end
+      
+      self.bs = nil
+      return 7
+    end
+    
+    if math.random(1, 2) == 1 then
+      Fighter.sideSquadron(1, 1)
+    else
+      Dart.firingSquad(5)
+    end
+    
+    self.wait = 5
+    return 6
+  elseif i == 7 then
+    self.wait = 2
+    return 8
+  end
+end
+
+function Game:waveInfinite(i, r)
+  if i == 0 then
+    return 1
+  elseif i == 1 then
+    local t = math.random(1, 3)
+    
+    if t == 1 then
+      Pawn.crissCross(12, 0.5, 100, 120)
+    elseif t == 2 then
+      Pawn.line(10, 1, 120)
+      Pawn.line(10, 2, 120)
+      Pawn.line(10, 3, 120)
+    elseif t == 3 then
+      Pawn.diagonal(10, 1, nil, 0, 120)
+      Pawn.diagonal(10, -1, nil, 0, 120)
+    end
+    
+    self.wait = 7
+    
+    if r < 4 then
+      return 1, 1
+    else
+      return 2, 0
+    end
+  elseif i == 2 then
+    local t = math.random(1, 4)
+    
+    if t == 1 then
+      Pawn.line(10, 1, 120)
+      if math.random(1, 2) == 1 then Pawn.line(10, 3, 120) end
+      
+      if math.random(1, 2) == 1 then
+        local a = Anchor:new(love.graphics.width / 2, Enemy.spawnY - 150, 150, 50)
+        local a1 = Fighter.circle(6, 60)
+        local a2 = Fighter.circle(6, 60)
+        a1:setAnchor(a, 0, math.tau / 4)
+        a2:setAnchor(a, math.tau / 2, math.tau / 4)
+        self:add(a)
+      else
+        Fighter.circle(10, 70, love.graphics.width / 3)
+        Fighter.circle(10, 70, love.graphics.width * (2/3))
+      end
+    elseif t == 2 then
+      if math.random(1, 2) == 1 then
+        Fighter.circle(10, 70)
+      else
+        Dart.firingSquad(8)
+      end
+      
+      local a = Anchor:new(love.graphics.width / 2, Enemy.spawnY - 150, 150, 50)
+      local a1 = Pawn.circle(10, 50)
+      local a2 = Pawn.circle(10, 50)
+      a1:setAnchor(a, 0, math.tau / 4)
+      a2:setAnchor(a, math.tau / 2, math.tau / 4)
+      self:add(a)
+    elseif t == 3 then
+      Fighter.sideSquadron(10, 1)
+      Dart.firingSquad(5, 0.6, 3)
+    elseif t == 4 then
+      Pawn.circle(10, 50, love.graphics.width / 4)
+      Pawn.circle(10, 50, love.graphics.width * .75)
+      Fighter.sideSquadron(3, 1)
+    end
+    
+    if r < 10 then
+      if r % 3 == 0 then
+        self.wait = "enemies"
+      else
+        self.wait = 8
+      end
+      
+      return 2, 1
+    else
+      self.wait = "enemies"
+      return 3, 0
+    end
+  elseif i == 3 then
+    local t = math.random(1, 3)
+    
+    self:add(Cannon:new(love.graphics.width * .25, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .5, nil, 100))
+    self:add(Cannon:new(love.graphics.width * .75, nil, 100))
+    
+    if math.random(1, 2) == 1 then
+      Pawn.crissCross(8, 0.7)
+    else
+      Dart.firingSquad(5, 0.6, 2)
+    end
+    
+    if t == 1 then
+      Fighter.sideSquadron(5, 1)
+    elseif t == 2 then
+      Fighter.line(4)
+    elseif t == 3 then
+      Fighter.circle(8, 60)
+    end
+    
+    if r < 3 then
+      self.wait = 8
+      return 3, 1
+    else
+      self.wait = "enemies"
+      return 4, 0
+    end
+  elseif i == 4 then
+    self.bs = Battleship:new(love.graphics.width / 2, 5000)
+    self:add(self.bs)
+    return 5
+  elseif i == 5 then
+    if self.bs.dead then
+      self.bs = nil
+      return 2
+    end
+    
+    local t = math.random(1, 4)
+    
+    if t == 1 then
+      Fighter.sideSquadron(1, 1)
+    elseif t == 2 then
+      Dart.firingSquad(6, 0.5)
+    elseif t == 3 then
+      Dart.line(6)
+    elseif t == 4 then
+      Fighter.line(4, 100, false)
+    end
+    
+    self.wait = 5
+    return 5
   end
 end
   

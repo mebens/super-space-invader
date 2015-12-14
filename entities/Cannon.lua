@@ -2,12 +2,12 @@ Cannon = class("Cannon", Enemy)
 Cannon.static.width = 36
 Cannon.static.height = 40
 
-function Cannon:initialize(x, y)
+function Cannon:initialize(x, y, ySpeed)
   Enemy.initialize(self, x, y or Enemy.spawnY - Cannon.height)
   self.width = Cannon.width
   self.height = Cannon.height
   self.health = 350
-  self.ySpeed = 50
+  self.ySpeed = ySpeed or 50
   self.contactDamage = 150
   self.map = Spritemap:new(assets.images.cannon, 18, 20)
   self.map:add("fire", { 4, 7, 6, 5, 4, 3, 2, 1 }, 20, false)
@@ -51,8 +51,9 @@ function Cannon:update(dt)
 end
 
 function Cannon:die(e, r)
-  Enemy.die(self, e, r)
+  if self.dead then return end
   self.engine:stop()
   self.engine = nil
+  Enemy.die(self, e, r)
 end
   

@@ -1,14 +1,15 @@
 BattleshipShot = class("BattleshipShot", Entity)
-BattleshipShot.static.radius = 5
+BattleshipShot.static.radius = 3
 
 function BattleshipShot:initialize(x, y, angle)
   Entity.initialize(self, x, y)
-  self.layer = 4
+  self.layer = 3
   self.type = "circle"
   self.angle = angle
+  self.radius = BattleshipShot.radius
   self.damage = 40
-  self.speed = 300
-  self.color = { 220, 120, 0 }
+  self.speed = 200
+  self.color = { 255, 200, 0 }
 end
 
 function BattleshipShot:added()

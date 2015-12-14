@@ -1,10 +1,3 @@
-function collide(e1, e2)
-  return e1.x + e1.width / 2 > e2.x - e2.width / 2
-    and e1.x - e1.width / 2 < e2.x + e2.width / 2
-    and e1.y + e1.height / 2 > e2.y - e2.height / 2
-    and e1.y - e1.height / 2 < e2.y + e2.height / 2
-end
-
 function playSound(sound, volume, pan)
   if type(sound) == "string" then sound = assets.sfx[sound] end
   return sound:play(volume, pan)

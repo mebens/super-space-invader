@@ -1,5 +1,11 @@
 Bullet = class("Bullet", Entity)
 Bullet.static.all = LinkedList:new("_nextBullet", "_prevBullet")
+Bullet.static.canvas = love.graphics.newCanvas(1, 10)
+
+Bullet.canvas:renderTo(function()
+  love.graphics.setColor(255, 255, 255)
+  love.graphics.rectangle("fill", 0, 0, 1, 10)
+end)
 
 function Bullet:initialize(x, y, speed)
   Entity.initialize(self, x, y)
@@ -29,10 +35,8 @@ function Bullet:update(dt)
 end
 
 function Bullet:draw()
-  love.graphics.storeColor()
   love.graphics.setColor(self.color)
-  self.shape:draw()
-  love.graphics.resetColor()
+  love.graphics.draw(Bullet.canvas, self.x, self.y, 0, 1, 1, self.width / 2, self.height / 2)
 end
 
 function Bullet:die()

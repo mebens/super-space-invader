@@ -54,12 +54,12 @@ function UI:update(dt)
     self.selectTimer = 0
     self.selectingSnd:stop()
     
-    if input.pressed("left") and self.selected > 1 then
+    if input.pressed("left") and self.selected > 1 and self:checkSelect(self.selected - 1) then
       self.selected = self.selected - 1
       playRandom{"select1", "select2"}
     end
     
-    if input.pressed("right") and self.selected < #self.items then
+    if input.pressed("right") and self.selected < #self.items and self:checkSelect(self.selected + 1) then
       self.selected = self.selected + 1
       playRandom{"select1", "select2"}
     end
@@ -151,6 +151,13 @@ function UI:deactivate()
   self.active = false
 end
 
+function UI:checkSelect(index)
+  local item = self.items[index]
+  if not item then return false end
+  if not instanceOf(Text, item) then item = item[1] end
+  return item.select ~= nil
+end
+
 function UI:addItem(text, func)
   if instanceOf(Text, text) then
     text.select = func
@@ -165,12 +172,14 @@ function UI:welcome()
   self.items = {}
   self.selected = 1
   self.state = "welcome"
-  self.title.text = "#LOLM7+1"
+  self.title.text = "Super Space Invader"
   
   if data.wave > 0 then
+    local waveTxt = data.wave < 13 and "wave " .. data.wave or "infinite wave"
+    
     local texts = {
       Text:new{"Continue", font = assets.fonts.main[24], align = "center", y = -14},
-      Text:new{"from wave " .. data.wave, font = assets.fonts.main[12], align = "center", y = 14}
+      Text:new{"from " .. waveTxt, font = assets.fonts.main[12], align = "center", y = 14}
     }
     
     self:addItem(texts, function()
@@ -182,11 +191,27 @@ function UI:welcome()
     end)
   end
   
-  self:addItem(Text:new{"Start\nNew Game", font = assets.fonts.main[24], align = "center", y = -24}, function() 
+  local newText = data.wave > 0 and "New\nGame" or "New Game"
+  local newOffset = data.wave > 0 and -24 or -14
+  
+  self:addItem(Text:new{newText, font = assets.fonts.main[24], align = "center", y = newOffset}, function() 
     self.world.player:applyLevels(0, 0)
+    self.world.score = 0
     self:deactivate()
     self.state = nil
     delay(0.25, self.world.startWave, self.world, 1)
+  end)
+  
+  local texts = {
+    Text:new{"Sandbox", font = assets.fonts.main[24], align = "center" , y = -14},
+    Text:new{"Infinite wave with all upgrades", font = assets.fonts.main[12], align = "center", y = 14}
+  }
+  
+  self:addItem(texts, function()
+    self.world.player:applyLevels(6, 7)
+    self.world.score = 0
+    self:deactivate()
+    delay(0.25, self.world.startSandbox, self.world)
   end)
   
   self:activate()
@@ -194,12 +219,17 @@ end
 
 function UI:upgrades()
   self.items = {}
-  self.selected = 1
   self.state = "upgrades"
   self.title.text = "Pick an upgrade"
   
   local attack = Player.attackUpgrades[self.world.player.attackLvl + 1]
   local defence = Player.defenceUpgrades[self.world.player.defenceLvl + 1]
+  
+  if attack then
+    self.selected = 1
+  else
+    self.selected = 2
+  end
   
   if attack then
     local texts = {
@@ -213,7 +243,7 @@ function UI:upgrades()
       delay(0.25, self.world.nextWave, self.world)
     end)
   else
-    self:addItme({
+    self:addItem({
       Text:new{"N/A", font = assets.fonts.main[18], align = "center", y = -24},
       Text:new{"You've completed every attack upgrade", font = assets.fonts.main[12], align = "center", y = 5}
     })
@@ -231,7 +261,7 @@ function UI:upgrades()
       delay(0.25, self.world.nextWave, self.world)
     end)
   else
-    self:addItme({
+    self:addItem({
       Text:new{"N/A", font = assets.fonts.main[18], align = "center", y = -24},
       Text:new{"You've completed every defence upgrade", font = assets.fonts.main[12], align = "center", y = 5}
     })
@@ -250,22 +280,40 @@ function UI:death()
   self.state = "death"
   self.title.text = "Game over"
   
-  self:addItem(Text:new{"Restart Wave", font = assets.fonts.main[18], align = "center", y = -11 }, function()
+  local waveFunc = function()
     self:deactivate()
     self.world.score = data.score
     delay(0.25, self.world.startWave, self.world, self.world.waveNum)
-  end)
+  end
+  
+  self:addItem(Text:new{"Restart\nWave", font = assets.fonts.main[18], align = "center", y = -20 }, waveFunc)
   
   local texts = {
-    Text:new{"Restart Game", font = assets.fonts.main[18], align = "center", y = -11 },
-    Text:new{"Overwrites saved data", font = assets.fonts.main[12], align = "center", y = 13 }
+    Text:new{"Restart\nGame", font = assets.fonts.main[18], align = "center", y = -20 },
+    Text:new{"Overwrites saved data", font = assets.fonts.main[12], align = "center", y = 26 }
   }
   
   self:addItem(texts, function()
     self.world.player:applyLevels(0, 0)
+    self.world.score = 0
     self:deactivate()
     delay(0.25, self.world.startWave, self.world, 1)
   end)
+  
+  
+  texts = {
+    Text:new{"Sandbox", font = assets.fonts.main[18], align = "center" , y = -20},
+    Text:new{"Infinite wave with all upgrades", font = assets.fonts.main[12], align = "center", y = 13}
+  }
+  
+  local sandboxFunc = function()
+    self.world.player:applyLevels(6, 7)
+    self.world.score = 0
+    self:deactivate()
+    delay(0.25, self.world.startSandbox, self.world)
+  end
+  
+  self:addItem(texts, (self.world.waveNum == 13 and not self.world.sandbox) and waveFunc or sandboxFunc)
   
   if self.world.player.shieldAllowed then
     self.smallInstructions.text = "Don't forget you can toggle your shield by pressing left and right together!"

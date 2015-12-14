@@ -1,9 +1,9 @@
 Player = class("Player", Entity)
 Player.static.attackUpgrades = {
   { "Two Guns", "Double the trouble" },
-  { "Faster Firerate", "50% more dak dak" },
-  { "Faster Bullets", "Double the muzzle velocity" },
+  { "Faster Firerate", "50% more bullets" },
   { "Homing Missiles", "In case bullets weren't enough" },
+  { "Faster Bullets", "Double the muzzle velocity" },
   { "More Missiles", "50% faster firerate" },
   { "Three Guns", "You can taste the freedom" }
 }
@@ -12,8 +12,9 @@ Player.static.defenceUpgrades = {
   { "Double Health", "Give the ship a beer gut" },
   { "Shield", "Toggle by pressing left and right together" },
   { "Less Regen Delay", "40% less dicking around" },
-  { "Faster Regen", "Half as many sick days" },
-  { "Shield Stamina", "+100 shield health" },
+  { "Faster Regen", "50% less sick days" },
+  { "Health and Shield", "+100 shield health\n+50 health" },
+  { "Shield Regen", "50% less time in the open" },
   { "Shield Explosion", "The shield will take some fools with it when it blows" }
 }
 
@@ -265,8 +266,8 @@ function Player:shoot()
   end
   
   if self.guns == 2 or self.guns == 3 then
-    self.world:add(Bullet:new(self.x - self.sideGunOffsetX, self.y + self.sideGunOffsetY))
-    self.world:add(Bullet:new(self.x + self.sideGunOffsetX, self.y + self.sideGunOffsetY))
+    self.world:add(Bullet:new(self.x - self.sideGunOffsetX, self.y + self.sideGunOffsetY, self.bulletSpeed))
+    self.world:add(Bullet:new(self.x + self.sideGunOffsetX, self.y + self.sideGunOffsetY, self.bulletSpeed))
   end
 end
 
@@ -290,6 +291,7 @@ function Player:damage(amount)
       self.shieldRegenTimer = self.shieldRegenTime
       self.shieldHealth = self.shieldMaxHealth
       self.shieldSound:stop()
+      playSound("voice-shield-broken")
       if self.shieldExplosion then self:explodeShield() end
     end
   else
@@ -303,6 +305,10 @@ function Player:damage(amount)
       playRandom{"hit1", "hit2", "hit3"}
     end
   end
+  
+  if not self.dead then
+    self.world:shake(amount > 40 and 2 or 1, 0.05)
+  end
 end
 
 function Player:applyLevels(attack, defence)
@@ -312,8 +318,8 @@ function Player:applyLevels(attack, defence)
   
   if self.attackLvl >= 1 then self.guns = 2 end
   if self.attackLvl >= 2 then self.shootInterval = 0.125 end
-  if self.attackLvl >= 3 then self.bulletSpeed = 800 end
-  if self.attackLvl >= 4 then self.missiles = true end
+  if self.attackLvl >= 3 then self.missiles = true end
+  if self.attackLvl >= 4 then self.bulletSpeed = 800 end
   if self.attackLvl >= 5 then self.missileInterval = 2.5 end
   if self.attackLvl >= 6 then self.guns = 3 end
   
@@ -329,9 +335,12 @@ function Player:applyLevels(attack, defence)
   if self.defenceLvl >= 5 then
     self.shieldMaxHealth = 250
     self.shieldHealth = self.shieldMaxHealth
+    self.maxHealth = 250
+    self.health = self.maxHealth
   end
   
-  if self.defenceLvl >= 6 then self.shieldExplosion = true end
+  if self.defenceLvl >= 6 then self.shieldRegenTime = 5 end
+  if self.defenceLvl >= 7 then self.shieldExplosion = true end
 end
 
 function Player:reset()

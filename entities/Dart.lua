@@ -17,6 +17,7 @@ function Dart.static.firingSquad(cols, time, reps, ySpeed)
   local i = 1
   local y = Enemy.spawnY - Dart.height
   local x = Enemy.padX + Dart.width / 2
+  reps = reps or 1
   
   local function fire()
     if not ammo.world.inWave then return end
@@ -88,7 +89,8 @@ function Dart:draw()
 end
 
 function Dart:die(e, r)
-  Enemy.die(self, e, r)
+  if self.dead then return end
   self.engine:stop()
   self.engine = nil
+  Enemy.die(self, e, r)
 end
