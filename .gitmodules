@@ -1,0 +1,18 @@
+[submodule "lib/assets"]
+	path = lib/assets
+	url = https://github.com/BlackBulletIV/ammo-assets.git
+[submodule "lib/ammo"]
+	path = lib/ammo
+	url = https://github.com/BlackBulletIV/ammo.git
+[submodule "lib/tweens"]
+	path = lib/tweens
+	url = https://github.com/BlackBulletIV/ammo-tweens.git
+[submodule "lib/input"]
+	path = lib/input
+	url = https://github.com/BlackBulletIV/ammo-input.git
+[submodule "lib/gfx"]
+	path = lib/gfx
+	url = https://github.com/BlackBulletIV/love-gfx.git
+[submodule "lib/hc"]
+	path = lib/hc
+	url = https://github.com/vrld/HC.git

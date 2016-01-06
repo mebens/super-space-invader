@@ -31,6 +31,7 @@ require("entities.Background")
 require("worlds.Game")
 
 TILE_SIZE = 9 
+Object = class.Object
 
 function love.load()
   assets.loadFont("square.ttf", { 70, 24, 18, 12, 8 }, "main")

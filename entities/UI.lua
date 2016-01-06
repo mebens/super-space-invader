@@ -103,7 +103,7 @@ function UI:draw()
       love.graphics.setColor(148, 228, 255, alpha * self.alpha)
       love.graphics.rectangle("fill", x, y, width, self.height)
       
-      if instanceOf(Text, item) then
+      if Object.isInstanceOf(item, Text) then
         item.width = width
         item.color[4] = 255 * self.alpha
         item:draw(x + offsetX, y + self.height / 2 + item.y + offsetY)
@@ -132,7 +132,7 @@ end
 
 function UI:select()
   local item = self.items[self.selected]
-  if not instanceOf(Text, item) then item = item[1] end
+  if not Object.isInstanceOf(item, Text) then item = item[1] end
   local result = item.select()
   if result ~= true then self:deactivate() end
   self.selectTimer = 0
@@ -154,12 +154,12 @@ end
 function UI:checkSelect(index)
   local item = self.items[index]
   if not item then return false end
-  if not instanceOf(Text, item) then item = item[1] end
+  if not Object.isInstanceOf(item, Text) then item = item[1] end
   return item.select ~= nil
 end
 
 function UI:addItem(text, func)
-  if instanceOf(Text, text) then
+  if Object.isInstanceOf(text, Text) then
     text.select = func
   elseif func then
     text[1].select = func

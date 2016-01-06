@@ -3,7 +3,7 @@ task :default do
 end
 
 task :lines do
-  puts `wc -l *.lua misc/*.lua entities/*.lua worlds/*.lua`
+  puts `wc -l *.lua misc/*.lua modules/*.lua entities/*.lua worlds/*.lua`
 end
 
 task :package do
