@@ -1,4 +1,4 @@
-Super Space Invader was my submission for Ludum Dare 34.
+My submission for Ludum Dare 34.
 
 **Links**
 
@@ -24,6 +24,6 @@ Auxiliary controls:
 * P to pause/unpause 
 * Enter/space to select menu item if holding down left and right is too much trouble 
 
-## Run/Install
+### Run/Install
 
 Download the appropriate file at the [game's page](http://nova-fusion.com/games/super-space-invader). Alternatively, you can clone or download this repo which (along with the .love download) will require [LÖVE](http://love2d.org) 0.9.2 to run it.
